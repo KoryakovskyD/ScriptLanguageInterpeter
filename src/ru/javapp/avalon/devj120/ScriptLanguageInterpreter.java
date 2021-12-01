@@ -23,18 +23,36 @@ public class ScriptLanguageInterpreter {
     private void read(File file) throws IOException {
         try(BufferedReader br = new BufferedReader(new FileReader(file))) {
             String s;
+            int fPrint = 0;
             while ((s = br.readLine()) != null) {
                 if (s.isEmpty()) continue;
 
                 String word = "";
                 char[] charArray = s.toCharArray();
                 Character curChar;
+                Character nextChar = null;
                 for (int i = 0; i < s.length(); i++) {
                     curChar = charArray[i];
+
+                    if (curChar.equals(""))
+                        continue;
 
                     // если комментарий, то пропускаем строку
                     if (charArray[0] == '#')
                         break;
+
+                    if (curChar.equals("\""))
+                        fPrint++;
+
+
+                    if (word.equals("print") ) {
+                        word = word + curChar;
+                        if (fPrint==2)
+                            fPrint=0;
+                        System.out.println(word);
+                    }
+                    if (word.equals("print"))
+                        continue;
 
 
                     if ((curChar >= 'a' && curChar <= 'z') || (curChar >= 'A' && curChar <= 'Z')) { //|| (curChar >= '0' && curChar <= '9')) {
@@ -42,7 +60,6 @@ public class ScriptLanguageInterpreter {
                         if (i!=s.length()-1) continue;
                     }
 
-                    if (word.equals("print"))
 
                     if (curChar == '$') {
                         word = "$";

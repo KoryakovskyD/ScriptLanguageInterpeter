@@ -24,6 +24,7 @@ public class ScriptLanguageInterpreter {
         try(BufferedReader br = new BufferedReader(new FileReader(file))) {
             String s;
             int fPrint = 0;
+            int fNewLine = 0;
             while ((s = br.readLine()) != null) {
                 if (s.isEmpty()) continue;
 
@@ -34,25 +35,34 @@ public class ScriptLanguageInterpreter {
                 for (int i = 0; i < s.length(); i++) {
                     curChar = charArray[i];
 
-                    if (curChar.equals(""))
+                    if (curChar == null)
                         continue;
 
                     // если комментарий, то пропускаем строку
                     if (charArray[0] == '#')
                         break;
 
-                    if (curChar.equals("\""))
+                    if (curChar.equals('\"')) {
                         fPrint++;
-
-
-                    if (word.equals("print") ) {
-                        word = word + curChar;
-                        if (fPrint==2)
-                            fPrint=0;
-                        System.out.println(word);
-                    }
-                    if (word.equals("print"))
+                        fNewLine = 1;
+                        if (fPrint==2) {
+                            fPrint = 0;
+                            System.out.print(word);
+                            word="";
+                        }
                         continue;
+                    }
+
+
+                    if (fPrint!=0) {
+                        word = word + curChar;
+                        continue;
+                    }
+
+                    if ((fNewLine == 1) && (i==s.length()-1)) {
+                        System.out.println("\n");
+                        fNewLine=0;
+                    }
 
 
                     if ((curChar >= 'a' && curChar <= 'z') || (curChar >= 'A' && curChar <= 'Z')) { //|| (curChar >= '0' && curChar <= '9')) {
@@ -60,11 +70,11 @@ public class ScriptLanguageInterpreter {
                         if (i!=s.length()-1) continue;
                     }
 
-
                     if (curChar == '$') {
                         word = "$";
                         continue;
                     }
+
 
                     if ( word != "" && (curChar >= '0' && curChar <= '9')) {
                         word = word + curChar;

@@ -10,14 +10,19 @@ import java.util.Map;
 
 
 public class ScriptLanguageInterpreter {
-    private final Map<String, Integer > variables = new HashMap<>();
+    private final Map<String, String > variables = new HashMap<>();
 
     public ScriptLanguageInterpreter(File file) throws IOException {
         read(file);
-        for (Map.Entry<String ,Integer> kv : variables.entrySet()) {
-                System.out.println(kv.getKey() + '=' + kv.getValue());
+
+        System.out.println("-------------------------");
+
+
+        for (Map.Entry<String ,String> kv : variables.entrySet()) {
+                System.out.println(kv.getKey() + ' ' + kv.getValue());
             }
     }
+
 
     // чтение файла
     private void read(File file) throws IOException {
@@ -42,28 +47,6 @@ public class ScriptLanguageInterpreter {
                     if (charArray[0] == '#')
                         break;
 
-                    if (curChar.equals('\"')) {
-                        fPrint++;
-                        fNewLine = 1;
-                        if (fPrint==2) {
-                            fPrint = 0;
-                            System.out.print(word);
-                            word="";
-                        }
-                        continue;
-                    }
-
-
-                    if (fPrint!=0) {
-                        word = word + curChar;
-                        continue;
-                    }
-
-                    if ((fNewLine == 1) && (i==s.length()-1)) {
-                        System.out.println("\n");
-                        fNewLine=0;
-                    }
-
 
                     if ((curChar >= 'a' && curChar <= 'z') || (curChar >= 'A' && curChar <= 'Z')) { //|| (curChar >= '0' && curChar <= '9')) {
                         word = word + curChar;
@@ -81,20 +64,104 @@ public class ScriptLanguageInterpreter {
                         if (i!=s.length()-1) continue;
                     }
 
-
-                    if (word != "") {
-                        if (variables.containsKey(word.toLowerCase(Locale.ROOT))) {
-                            int savVal = variables.get(word.toLowerCase(Locale.ROOT));
-                            variables.replace(word.toLowerCase(Locale.ROOT), savVal, savVal+1);
-                            word="";
-                            continue;
-                        } else {
-                            variables.put(word.toLowerCase(), 1);
-                            word = "";
-                        }
+                    if (word.equals("print")) {
+                        printString(s.substring(i+1));
+                        System.out.println("\n");
+                        break;
                     }
+
+                    if (word.equals("set")) {
+                        saveSetValue(s.substring(i+1));
+                        break;
+                    }
+
+
+                    if (word != "")
+                        word = "";
+
+
                 }
             }
         }
+    }
+
+    private void saveSetValue(String s) {
+        System.out.println("s=" + s);
+        String word = "";
+        String  value = "";
+        boolean fVal = false;
+        char[] charArray = s.toCharArray();
+        Character curChar;
+        for (int i = 0; i < s.length(); i++) {
+            curChar = charArray[i];
+
+            if (fVal) {
+                if (Character.isDigit(curChar)) {
+                    value = value + curChar;
+                    if (i!=s.length()) continue;
+                }
+            }
+
+
+            if ((curChar >= 'a' && curChar <= 'z') || (curChar >= 'A' && curChar <= 'Z') || curChar.equals('$') ||
+            Character.isDigit(curChar)) {
+                word = word + curChar;
+
+            } else {
+                fVal = true;
+                continue;
+            }
+        }
+
+        if (!value.equals(""))
+            variables.put(word, String.valueOf(Integer.parseInt(value)));
+    }
+
+    private void printString(String s) {
+        System.out.println("s=" + s);
+        String word = "";
+        String finalStr = "";
+        char[] charArray = s.toCharArray();
+        Character curChar;
+        int fScob = 0;
+        for (int i = 0; i < s.length(); i++) {
+            curChar = charArray[i];
+
+            if (curChar.equals('\"')) {
+                fScob++;
+                if (fScob==1)
+                    continue;
+            }
+
+            if (fScob == 1) {
+                word = word + curChar;
+                continue;
+            }
+
+            if (fScob == 2) {
+                fScob=0;
+                finalStr = finalStr + word;
+                word="";
+                continue;
+            }
+
+            if ((curChar >= 'a' && curChar <= 'z') || (curChar >= 'A' && curChar <= 'Z') || curChar.equals('$') ||
+                    Character.isDigit(curChar)) {
+                word = word + curChar;
+                if (i==s.length()-1)
+                    finalStr = finalStr + word;
+            }
+
+/*
+            if (curChar == '+' || curChar == '-' || curChar == '=') {
+
+                if (variables.containsKey(word)) {
+                    System.out.print(variables.get(word));
+                }
+                word="";
+            }
+ */
+        }
+        System.out.println(finalStr);
     }
 }

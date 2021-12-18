@@ -15,16 +15,13 @@ public class Main {
             System.out.println("File \"" + args[0] + "\" isn't exist or can't read.");
             System.exit(1);
         }
-
-        for (String fileName: args) {
-            ScriptLanguageInterpreter sli = new ScriptLanguageInterpreter(new File(args[0]));
-        }
+        ScriptLanguageInterpreter sli = new ScriptLanguageInterpreter(new File(args[0]));
     }
 
     private static void help() {
-        System.out.println("\nThe program is designed to calculate the frequency of using words in the text.\n" +
-                "Input parameters: file names\n" +
-                "Examples: FrequencyDictionary text1 text2 text3\n");
+        System.out.println("\nThe program is designed to read abstract script language.\n" +
+                "Input parameters: file name\n" +
+                "Examples: ScriptLanguageInterpreter file\n");
         System.exit(0);
     }
 }

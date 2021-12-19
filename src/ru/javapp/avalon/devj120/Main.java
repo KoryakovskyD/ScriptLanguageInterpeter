@@ -15,7 +15,7 @@ public class Main {
             System.out.println("File \"" + args[0] + "\" isn't exist or can't read.");
             System.exit(1);
         }
-        ScriptLanguageInterpreter sli = new ScriptLanguageInterpreter(new File(args[0]));
+        new ScriptLanguageInterpreter(new File(args[0]));
     }
 
     private static void help() {

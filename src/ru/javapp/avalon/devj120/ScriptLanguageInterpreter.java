@@ -27,8 +27,7 @@ public class ScriptLanguageInterpreter {
             while ((s = br.readLine()) != null) {
                 if (s.isEmpty()) continue;
 
-                //StringBuilder word = new StringBuilder();
-                String  word="";
+                StringBuilder word = new StringBuilder();
                 char[] charArray = s.toCharArray();
                 Character curChar;
                 for (int i = 0; i < s.length(); i++) {
@@ -41,24 +40,24 @@ public class ScriptLanguageInterpreter {
                     if (charArray[0] == '#')
                         break;
 
-                    if (word.equals("print")) {
+                    if (String.valueOf(word).equals("print")) {
                         printString(s.substring(i + 1));
                         break;
                     }
 
-                    if (word.equals("set")) {
+                    if (String.valueOf(word).equals("set")) {
                         saveSetValue(s.substring(i + 1));
                         break;
                     }
 
-                    if (word.equals("input")) {
+                    if (String.valueOf(word).equals("input")) {
                         inputValue(s.substring(i + 1));
                         break;
                     }
 
                     // сформируем ключевое слово
                     if (Character.isLetter(curChar)) {
-                        word = word + curChar;
+                        word.append(curChar);
                         if (i != s.length() - 1) continue;
                     }
                 }
@@ -69,13 +68,13 @@ public class ScriptLanguageInterpreter {
 
     // ключевое слово set
     private void saveSetValue(String s) {
-        String wordName = "",
-               word= "",
-               value = "",
-               finalStr = "";
+        String value = "";
         boolean fVal = false;
         char[] charArray = s.toCharArray();
         Character curChar;
+        StringBuilder word = new StringBuilder(),
+                      wordName = new StringBuilder(),
+                      finalStr = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             curChar = charArray[i];
 
@@ -86,38 +85,37 @@ public class ScriptLanguageInterpreter {
                     continue;
 
                 if (curChar.equals('$') || Character.isLetter(curChar) || Character.isDigit(curChar)) {
-                    word = word + curChar;
-                    if (!word.contains("$"))
-                        value = word;
+                    word.append(curChar);
+                    if (!String.valueOf(word).contains("$"))
+                        value = String.valueOf(word);
                     if (i!=s.length()) continue;
                 }
 
                 if (Character.isWhitespace(curChar)) {
-                    if (word.equals(""))
+                    if (String.valueOf(word).equals(""))
                         continue;
 
-                    if (!word.contains("$")) {
-                        finalStr = finalStr + word;
-                        value = word;
-                        word = "";
+                    if (!String.valueOf(word).contains("$")) {
+                        finalStr.append(word);
+                        value = String.valueOf(word);
+                        word.delete(0,word.length());
                         continue;
                     }
 
-                    if (variables.containsKey(word))
-                        finalStr = finalStr + variables.get(word);
+                    if (variables.containsKey(String.valueOf(word)))
+                        finalStr.append(variables.get(String.valueOf(word)));
                     else {
                         System.out.println("Unknown variable " + word + "!!!");
                         System.exit(1);
                     }
-                    if (!word.contains("$"))
-                        value = word;
-                    word = "";
+                    if (!String.valueOf(word).contains("$"))
+                        value = String.valueOf(word);
+                    word.delete(0, word.length());
                     continue;
                 }
 
                 if (curChar.equals('-') || curChar.equals('+'))
-                    finalStr = finalStr + curChar;
-
+                    finalStr.append(curChar);
 
                 if (Character.isDigit(curChar)) {
                     value = value + curChar;
@@ -128,19 +126,19 @@ public class ScriptLanguageInterpreter {
             // формируем название переменной
             if (Character.isLetter(curChar) || curChar.equals('$') ||
             Character.isDigit(curChar)) {
-                wordName = wordName + curChar;
+                wordName.append(curChar);
             } else {
                 fVal = true;
                 continue;
             }
         }
 
-        finalStr = finalStr + value;
-        value = calculate(finalStr).toString();
+        finalStr.append(value);
+        value = String.valueOf(calculate(String.valueOf(finalStr)));
 
         // полжим в коллекцию переменную со значением
         if (!value.equals(""))
-            variables.put(wordName, String.valueOf(Integer.parseInt(value)));
+            variables.put(String.valueOf(wordName), value);
     }
 
     // переделать
@@ -181,14 +179,13 @@ public class ScriptLanguageInterpreter {
                 rez = rez - Integer.parseInt(word);
             }
         }
-
         return rez;
     }
 
     // ключевое слово print
     private void printString(String s) {
-        String word = "";
-        String finalStr = "";
+        StringBuilder word = new StringBuilder(),
+                    finalStr = new StringBuilder();
         char[] charArray = s.toCharArray();
         Character curChar;
         int fScob = 0;
@@ -197,9 +194,9 @@ public class ScriptLanguageInterpreter {
 
             if (i==s.length()-1) {
                 if (!curChar.equals('"'))
-                    word = word + curChar;
-                if (variables.containsKey(word))
-                    System.out.print(variables.get(word));
+                    word.append(curChar);
+                if (variables.containsKey(String.valueOf(word)))
+                    System.out.print(variables.get(String.valueOf(word)));
                 else
                     System.out.print(word);
                 break;
@@ -208,11 +205,11 @@ public class ScriptLanguageInterpreter {
             // если первая скобка, то печатаем слово и ставим флаг
             if (curChar.equals('\"')) {
                 if (!Character.isWhitespace(curChar)) {
-                    if (variables.containsKey(word))
-                        System.out.print(variables.get(word));
+                    if (variables.containsKey(String.valueOf(word)))
+                        System.out.print(variables.get(String.valueOf(word)));
                     else
                         System.out.print(word);
-                    word="";
+                    word.delete(0,word.length());
                 }
                 fScob++;
                 if (fScob==1)
@@ -221,22 +218,22 @@ public class ScriptLanguageInterpreter {
 
             // создаем слово внутри скобок
             if (fScob == 1) {
-                word = word + curChar;
+                word.append(curChar);
                 continue;
             }
 
             // формируем финальную строку, выходим из скобок
             if (fScob == 2) {
                 fScob=0;
-                finalStr = finalStr + word;
+                finalStr.append(word);
 
-                word="";
+                word.delete(0, word.length());
                 continue;
             }
 
             // формируем текущее слово
             if (Character.isLetter(curChar) || curChar.equals('$') || Character.isDigit(curChar)) {
-                word = word + curChar;
+                word.append(curChar);
                 }
             }
         // печать резузьтата

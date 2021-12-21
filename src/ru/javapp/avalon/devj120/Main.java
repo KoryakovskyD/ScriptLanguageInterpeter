@@ -24,4 +24,9 @@ public class Main {
                 "Examples: ScriptLanguageInterpreter file\n");
         System.exit(0);
     }
+
+    public static void systemExit(String str) {
+        System.out.println(str);
+        System.exit(1);
+    }
 }

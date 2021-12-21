@@ -10,6 +10,7 @@ import java.util.*;
 public class ScriptLanguageInterpreter {
     private final Map<String, String > variables = new HashMap<>();
 
+
     public ScriptLanguageInterpreter(File file) throws IOException {
         read(file);
 
@@ -40,17 +41,17 @@ public class ScriptLanguageInterpreter {
                     if (charArray[0] == '#')
                         break;
 
-                    if (String.valueOf(word).equals("print")) {
+                    if (String.valueOf(word).equals(Commands.print.toString())) {
                         printString(s.substring(i + 1));
                         break;
                     }
 
-                    if (String.valueOf(word).equals("set")) {
+                    if (String.valueOf(word).equals(Commands.set.toString())) {
                         saveSetValue(s.substring(i + 1));
                         break;
                     }
 
-                    if (String.valueOf(word).equals("input")) {
+                    if (String.valueOf(word).equals(Commands.input.toString())) {
                         inputValue(s.substring(i + 1));
                         break;
                     }
@@ -77,14 +78,14 @@ public class ScriptLanguageInterpreter {
                       finalStr = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             curChar = charArray[i];
-
             // формируем значение переменной
             if (fVal) {
 
                 if (curChar.equals('='))
                     continue;
 
-                if (curChar.equals('$') || Character.isLetter(curChar) || Character.isDigit(curChar)) {
+                if (curChar.equals('$') || Character.isLetter(curChar)
+                        || Character.isDigit(curChar) || curChar.equals('_')) {
                     word.append(curChar);
                     if (!String.valueOf(word).contains("$"))
                         value = String.valueOf(word);
@@ -105,8 +106,7 @@ public class ScriptLanguageInterpreter {
                     if (variables.containsKey(String.valueOf(word)))
                         finalStr.append(variables.get(String.valueOf(word)));
                     else {
-                        System.out.println("Unknown variable " + word + "!!!");
-                        System.exit(1);
+                        Main.systemExit("Unknown variable " + word + "!!!");
                     }
                     if (!String.valueOf(word).contains("$"))
                         value = String.valueOf(word);
@@ -125,7 +125,7 @@ public class ScriptLanguageInterpreter {
 
             // формируем название переменной
             if (Character.isLetter(curChar) || curChar.equals('$') ||
-            Character.isDigit(curChar)) {
+            Character.isDigit(curChar) || curChar.equals('_')) {
                 wordName.append(curChar);
             } else {
                 fVal = true;
@@ -136,51 +136,75 @@ public class ScriptLanguageInterpreter {
         finalStr.append(value);
         value = String.valueOf(calculate(String.valueOf(finalStr)));
 
+
         // полжим в коллекцию переменную со значением
         if (!value.equals(""))
             variables.put(String.valueOf(wordName), value);
     }
 
-    // переделать
-    // посчитать значение из строки
-    private Integer calculate(String finalStr) {
-        int rez = 0;
-        String word = "";
 
-        List<Integer> listAll = new ArrayList<>();
-        List<Character> znaki = new ArrayList<>();
-        char[] charArray = finalStr.toCharArray();
-        Character curChar = null;
-        for (int i = 0; i < finalStr.length(); i++) {
-            curChar = charArray[i];
 
-            if (Character.isDigit(curChar)) {
-                word = word + curChar;
-                if (i != finalStr.length()) continue;
-            }
 
-            if (curChar.equals('-') || curChar.equals('+')) {
-                znaki.add(curChar);
-                listAll.add(Integer.parseInt(word));
-                word="";
-            }
-        }
+    public static int calculate(String str) {
+        StringBuilder operandsList = new StringBuilder(),
+                      strForCalc = new StringBuilder();
+        char curChar;
+        Deque<Integer> stack = new ArrayDeque<>();;
+        StringTokenizer st;
 
-        if (znaki.isEmpty()) {
-            return  Integer.parseInt(word);
-        }
-
-        for (Character znak : znaki) {
-            if (znak.equals('+')){
-                rez = listAll.get(0) +listAll.get(1);
-            }
-
-            if (znak.equals('-')){
-                rez = rez - Integer.parseInt(word);
+        // сформируем две строки с операндами и числами
+        for (int i = 0; i < str.length(); i++) {
+            curChar = str.charAt(i);
+            if (curChar=='-' || curChar=='+') {
+                while (operandsList.length() > 0) {
+                        strForCalc.append(" ");
+                        break;
+                }
+                strForCalc.append(" ");
+                operandsList.append(curChar);
+            }   else {
+                strForCalc.append(curChar);
             }
         }
-        return rez;
+
+        // добавим операнды к числам в обратном порядке
+        while (operandsList.length() > 0) {
+            strForCalc.append(" ").append(operandsList.substring(operandsList.length()-1));
+            operandsList.setLength(operandsList.length()-1);
+        }
+
+        // посчитаем выражение
+        int val1,
+            val2;
+        String curStr;
+        st = new StringTokenizer(strForCalc.toString());
+        while(st.hasMoreTokens()) {
+                curStr = st.nextToken().trim();
+                if (curStr.length() == 1) {
+                    val2 = stack.pop();
+                    val1 = stack.pop();
+                    switch (curStr.charAt(0)) {
+                        case '+':
+                            val1 += val2;
+                            break;
+                        case '-':
+                            val1 -= val2;
+                            break;
+                        default:
+                    }
+                    stack.push(val1);
+                } else {
+                    try {
+                        val1 = Integer.parseInt(curStr);
+                        stack.push(val1);
+                    } catch (NumberFormatException e) {
+                        Main.systemExit("Not correct string for calculate.");
+                    }
+                }
+            }
+        return stack.pop();
     }
+
 
     // ключевое слово print
     private void printString(String s) {
@@ -232,13 +256,15 @@ public class ScriptLanguageInterpreter {
             }
 
             // формируем текущее слово
-            if (Character.isLetter(curChar) || curChar.equals('$') || Character.isDigit(curChar)) {
+            if (Character.isLetter(curChar) || curChar.equals('$')
+                    || Character.isDigit(curChar) || curChar.equals('_')) {
                 word.append(curChar);
                 }
             }
         // печать резузьтата
         System.out.println(finalStr);
     }
+
 
     // ключевое слово input
     private void inputValue(String s) {
@@ -268,10 +294,8 @@ public class ScriptLanguageInterpreter {
                 continue;
             }
 
-
-
-
-            if (flag == 0 && (Character.isLetter(curChar) || Character.isDigit(curChar) || curChar.equals('$'))) {
+            if (flag == 0 && (Character.isLetter(curChar) || Character.isDigit(curChar)
+                    || curChar.equals('$') || curChar.equals('_'))) {
                 word.append(curChar);
                 if (i==s.length()-1) {
                     variables.put(word.toString(), String.valueOf(newValue));

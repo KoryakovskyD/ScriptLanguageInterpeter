@@ -1,5 +1,8 @@
 package ru.javapp.avalon.devj120;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,7 +20,7 @@ public class ScriptInterpreter {
             line = line.trim();
 
             // Skip empty lines and comments
-            if (line.isEmpty() || line.startsWith("//")) {
+            if (line.isEmpty() || line.startsWith("//") || line.startsWith("#")) {
                 continue;
             }
 
@@ -49,6 +52,23 @@ public class ScriptInterpreter {
                         }
                     }
                     break;
+                case "cat":
+                    if (parts.length < 2) {
+                        System.out.println("Usage: cat <filename>");
+                    } else {
+                        String filename = parts[1];
+                        try {
+                            BufferedReader reader = new BufferedReader(new FileReader(filename));
+                            String lineRead;
+                            while ((lineRead = reader.readLine()) != null) {
+                                System.out.println(lineRead);
+                            }
+                            reader.close();
+                        } catch (IOException e) {
+                            System.out.println("Error reading file: " + e.getMessage());
+                        }
+                    }
+                    break;
                 default:
                     System.out.println("Unknown command: " + command);
             }
@@ -69,7 +89,9 @@ public class ScriptInterpreter {
                 "print Hello, $name!\n" +
                 "// This is a comment\n" +
                 "set name Petya\n" +
-                "print Goodbye, $name!";
+                "# some comment\n" +
+                "print Goodbye, $name!\n" +
+                "cat text.txt";
 
         ScriptInterpreter interpreter = new ScriptInterpreter();
         interpreter.interpret(script);
